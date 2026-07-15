@@ -50,8 +50,16 @@ TIMEZONE: str = os.getenv("TIMEZONE", "Asia/Tashkent")
 
 # --- Slot generation ---
 SLOT_START_TIME: time = _parse_time(os.getenv("SLOT_START_TIME", "10:00"))
-SLOT_END_TIME: time = _parse_time(os.getenv("SLOT_END_TIME", "12:00"))
+SLOT_END_TIME: time = _parse_time(os.getenv("SLOT_END_TIME", "00:00"))
 SLOT_DURATION_MINUTES: int = int(os.getenv("SLOT_DURATION_MINUTES", "30"))
+
+# --- Reliability settings ---
+# How long a user has to send a payment receipt before their reserved slot
+# is automatically released back to everyone else.
+RECEIPT_TIMEOUT_MINUTES: int = int(os.getenv("RECEIPT_TIMEOUT_MINUTES", "15"))
+
+# Port for the /health endpoint an external uptime monitor can ping.
+HEALTHCHECK_PORT: int = int(os.getenv("HEALTHCHECK_PORT", "8080"))
 
 
 def is_admin(telegram_id: int) -> bool:

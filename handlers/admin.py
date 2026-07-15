@@ -1,9 +1,11 @@
 """
-Admin panel: /admin command, "Show Bookings" (today's bookings, joined view
-of users + slots + bookings), and Confirm/Reject buttons on incoming receipts.
+Admin panel: /admin command, "Show Today's Bookings", "Show Upcoming
+Bookings" (paginated, everything from today onward), and Confirm/Reject
+buttons on incoming receipts.
 """
 
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import asyncpg
 from aiogram import F, Router
@@ -12,10 +14,12 @@ from aiogram.types import CallbackQuery, Message
 
 import config
 from database import queries
-from keyboards.admin_keyboards import admin_menu_keyboard
-from keyboards.callback_data import BookingActionCallback
+from keyboards.admin_keyboards import admin_menu_keyboard, pagination_keyboard
+from keyboards.callback_data import BookingActionCallback, BookingsPageCallback
 
 router = Router(name="admin")
+
+PAGE_SIZE = 10
 
 
 @router.message(Command("admin"))
@@ -25,16 +29,16 @@ async def admin_panel(message: Message) -> None:
     await message.answer("Admin panel:", reply_markup=admin_menu_keyboard())
 
 
-@router.callback_query(F.data == "admin_show_bookings", F.from_user.id.in_(config.ADMIN_IDS))
+@router.callback_query(F.data == "admin_show_today_bookings", F.from_user.id.in_(config.ADMIN_IDS))
 async def show_todays_bookings(callback: CallbackQuery, db_pool: asyncpg.Pool) -> None:
-    """Fetches and displays every booking for today. The admin-only check
-    happens declaratively in the decorator above via
-    F.from_user.id.in_(config.ADMIN_IDS) - a non-admin's tap simply never
-    reaches this function at all."""
+    """The admin-only check happens declaratively in the decorator above
+    via F.from_user.id.in_(config.ADMIN_IDS) - a non-admin's tap simply
+    never reaches this function at all."""
     bookings = await queries.get_todays_bookings(db_pool)
+    today = datetime.now(ZoneInfo(config.TIMEZONE)).date()
 
     if not bookings:
-        text = f"📅 No bookings for today ({date.today().strftime('%A, %b %d')})."
+        text = f"📅 No bookings for today ({today.strftime('%A, %b %d')})."
     else:
         lines = [
             f"#{b['id']} · {b['full_name']} · {b['phone_number']}\n"
@@ -42,17 +46,56 @@ async def show_todays_bookings(callback: CallbackQuery, db_pool: asyncpg.Pool) -
             for b in bookings
         ]
         text = (
-            f"📅 Today's bookings ({date.today().strftime('%A, %b %d')}):\n\n"
+            f"📅 Today's bookings ({today.strftime('%A, %b %d')}):\n\n"
             + "\n\n".join(lines)
         )
 
-    # Sent as a NEW message (not an edit) so the admin panel's own
-    # "Show Bookings" button stays visible and can be tapped again any
-    # time, instead of being overwritten.
+    # Sent as a NEW message (not an edit) so the admin panel's own buttons
+    # stay visible and can be tapped again any time.
     await callback.message.answer(text)
-
-    # Stops the Telegram loading spinner on the tapped button.
     await callback.answer()
+
+
+@router.callback_query(F.data == "admin_show_upcoming_bookings", F.from_user.id.in_(config.ADMIN_IDS))
+async def show_upcoming_bookings(callback: CallbackQuery, db_pool: asyncpg.Pool) -> None:
+    await _render_upcoming_page(callback.message, db_pool, offset=0, as_new_message=True)
+    await callback.answer()
+
+
+@router.callback_query(BookingsPageCallback.filter(), F.from_user.id.in_(config.ADMIN_IDS))
+async def paginate_upcoming_bookings(
+    callback: CallbackQuery, callback_data: BookingsPageCallback, db_pool: asyncpg.Pool
+) -> None:
+    # Prev/Next edit the upcoming-bookings message itself, which is
+    # separate from the original admin panel message.
+    await _render_upcoming_page(callback.message, db_pool, offset=callback_data.offset, as_new_message=False)
+    await callback.answer()
+
+
+async def _render_upcoming_page(
+    message: Message, db_pool: asyncpg.Pool, offset: int, as_new_message: bool
+) -> None:
+    # Fetch one extra row just to know whether a "Next" page exists.
+    rows = await queries.get_upcoming_bookings(db_pool, limit=PAGE_SIZE + 1, offset=offset)
+    has_more = len(rows) > PAGE_SIZE
+    rows = rows[:PAGE_SIZE]
+
+    if not rows:
+        text = "📆 No upcoming bookings found."
+        markup = None
+    else:
+        lines = [
+            f"#{row['id']} · {row['full_name']} · {row['phone_number']}\n"
+            f"   {row['slot_date'].strftime('%a, %b %d')} at {row['slot_time'].strftime('%H:%M')} · {row['status']}"
+            for row in rows
+        ]
+        text = "📆 Upcoming bookings:\n\n" + "\n\n".join(lines)
+        markup = pagination_keyboard(offset, PAGE_SIZE, has_more)
+
+    if as_new_message:
+        await message.answer(text, reply_markup=markup)
+    else:
+        await message.edit_text(text, reply_markup=markup)
 
 
 @router.callback_query(BookingActionCallback.filter())

@@ -55,7 +55,7 @@ async def main() -> None:
     # away - important on first run or after any downtime - then keep
     # topping them up every night.
     await generate_upcoming_slots(pool)
-    scheduler = start_scheduler(pool)
+    scheduler = start_scheduler(pool, bot)
 
     try:
         logger.info("Bot starting...")

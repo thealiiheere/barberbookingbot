@@ -27,8 +27,18 @@ async def receipt_received(message: Message, state: FSMContext, db_pool: asyncpg
         return
 
     file_id = message.photo[-1].file_id  # largest resolution
-    await queries.save_receipt(db_pool, booking_id, file_id)
+    saved = await queries.save_receipt(db_pool, booking_id, file_id)
     await state.clear()
+
+    if not saved:
+        # The reservation already expired (see scheduler.expire_stale_bookings_job)
+        # before the receipt arrived - the slot's already been released.
+        await message.answer(
+            "Sorry, this reservation expired because the receipt wasn't received "
+            f"within {config.RECEIPT_TIMEOUT_MINUTES} minutes, and the slot was "
+            "released. Please choose a new time with /start."
+        )
+        return
 
     await message.answer(
         "Thanks! Your receipt was sent to the admin for confirmation. "

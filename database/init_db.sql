@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     slot_id          INTEGER NOT NULL REFERENCES time_slots(id),
     phone_number     TEXT NOT NULL,
     status           TEXT NOT NULL DEFAULT 'pending_payment'
-                        CHECK (status IN ('pending_payment', 'pending_confirmation', 'confirmed', 'rejected')),
+                        CHECK (status IN ('pending_payment', 'pending_confirmation', 'confirmed', 'rejected', 'expired')),
     receipt_file_id  TEXT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     confirmed_at     TIMESTAMPTZ,
