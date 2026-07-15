@@ -10,7 +10,7 @@ from keyboards.callback_data import BookingActionCallback, BookingsPageCallback
 
 def admin_menu_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text="📋 Show Bookings", callback_data="admin_show_bookings")
+    builder.button(text="📅 Show Bookings", callback_data="admin_show_bookings")
     return builder.as_markup()
 
 

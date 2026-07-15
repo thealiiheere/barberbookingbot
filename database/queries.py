@@ -200,6 +200,23 @@ async def reject_booking(pool: asyncpg.Pool, booking_id: int) -> None:
 # ADMIN PANEL
 # ---------------------------------------------------------------------------
 
+async def get_todays_bookings(pool: asyncpg.Pool) -> list[asyncpg.Record]:
+    """Every booking scheduled for today, any status, ordered by time.
+    Powers the admin's 'Show Bookings' button - deliberately scoped to
+    today only, since that's the day-to-day operational view a barber
+    shop actually needs."""
+    return await pool.fetch(
+        """
+        SELECT b.id, u.full_name, b.phone_number, ts.slot_date, ts.slot_time, b.status
+        FROM bookings b
+        JOIN users u ON u.id = b.user_id
+        JOIN time_slots ts ON ts.id = b.slot_id
+        WHERE ts.slot_date = CURRENT_DATE
+        ORDER BY ts.slot_time;
+        """
+    )
+
+
 async def get_all_bookings(
     pool: asyncpg.Pool, limit: int = 10, offset: int = 0
 ) -> list[asyncpg.Record]:
