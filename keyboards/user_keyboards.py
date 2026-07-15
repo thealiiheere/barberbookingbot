@@ -39,7 +39,7 @@ def dates_keyboard(start_date: date, days: int = 7) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for offset in range(days):
         day = start_date + timedelta(days=offset)
-        label = "Today" if offset == 0 else day.strftime("%a, %b %d")
+        label = "Bugun" if offset == 0 else day.strftime("%a, %b %d")
         builder.button(text=label, callback_data=DateCallback(date=day.isoformat()))
     builder.adjust(2)
     return builder.as_markup()
@@ -56,5 +56,5 @@ def slots_keyboard(
         label = slot["slot_time"].strftime("%H:%M")
         builder.button(text=label, callback_data=SlotCallback(slot_id=slot["id"]))
     builder.adjust(3)  # 3 time-buttons per row
-    builder.row(InlineKeyboardButton(text="🗓 Choose another date", callback_data=back_callback_data))
+    builder.row(InlineKeyboardButton(text="🗓 Boshqa sanani tanlash", callback_data=back_callback_data))
     return builder.as_markup()

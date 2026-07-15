@@ -10,8 +10,8 @@ from keyboards.callback_data import BookingActionCallback, BookingsPageCallback
 
 def admin_menu_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text="📅 Show Today's Bookings", callback_data="admin_show_today_bookings")
-    builder.button(text="📆 Show Upcoming Bookings", callback_data="admin_show_upcoming_bookings")
+    builder.button(text="📅 Bugungga bron qilinganlar", callback_data="admin_show_today_bookings")
+    builder.button(text="📆 Umimiy bron qilinganlar", callback_data="admin_show_upcoming_bookings")
     builder.adjust(1)  # stacked, one per row - both labels are a bit long for side-by-side
     return builder.as_markup()
 
@@ -19,11 +19,11 @@ def admin_menu_keyboard() -> InlineKeyboardMarkup:
 def confirm_reject_keyboard(booking_id: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="✅ Confirm",
+        text="✅ Tasdiqlash",
         callback_data=BookingActionCallback(action="confirm", booking_id=booking_id),
     )
     builder.button(
-        text="❌ Reject",
+        text="❌ Bekor qilish",
         callback_data=BookingActionCallback(action="reject", booking_id=booking_id),
     )
     builder.adjust(2)
@@ -34,12 +34,12 @@ def pagination_keyboard(offset: int, page_size: int, has_more: bool) -> InlineKe
     builder = InlineKeyboardBuilder()
     if offset > 0:
         builder.button(
-            text="⬅️ Prev",
+            text="⬅️ Ortga",
             callback_data=BookingsPageCallback(offset=max(0, offset - page_size)),
         )
     if has_more:
         builder.button(
-            text="➡️ Next",
+            text="➡️ keyingisi",
             callback_data=BookingsPageCallback(offset=offset + page_size),
         )
     builder.adjust(2)

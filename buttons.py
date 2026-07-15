@@ -42,14 +42,14 @@ async def _send_slots(callback: CallbackQuery, db_pool: asyncpg.Pool, target_dat
 
     if not slots:
         await callback.message.edit_text(
-            f"No available slots for {target_date.strftime('%A, %b %d')}.\n"
-            "Please choose another date.",
+            f"Tanlangan vaqtda bosh oyin yoq {target_date.strftime('%A, %b %d')}.\n"
+            "iltimos boshqa sana tanlang.",
             reply_markup=dates_keyboard(_today()),
         )
         return
 
     await callback.message.edit_text(
-        f"Available times for {target_date.strftime('%A, %b %d')}:",
+        f"Tanalagan sanada mavjud orinlar {target_date.strftime('%A, %b %d')}:",
         reply_markup=slots_keyboard(slots),
     )
 
@@ -105,11 +105,11 @@ async def slot_chosen(
     await state.update_data(booking_id=booking_id)
 
     await callback.message.edit_text(
-        f"You picked {slot['slot_time'].strftime('%H:%M')} on "
+        f"Siz tanlagan vaqt {slot['slot_time'].strftime('%H:%M')} on "
         f"{slot['slot_date'].strftime('%A, %b %d')}. ✅\n\n"
-        f"To confirm, please pay {config.APPOINTMENT_PRICE} so'm to:\n"
+        f"Tasdiqlash uchun, iltimos shu karta raqamiga {config.APPOINTMENT_PRICE} so'm tolov qiling:\n"
         f"💳 {config.BARBER_CARD_NUMBER}\n\n"
-        "Then send a photo of the payment receipt here."
+        "Keyin shu yerga chek rasmi yoki skrinshotini yuboring."
     )
     await callback.answer()
 

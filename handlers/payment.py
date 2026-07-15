@@ -34,15 +34,15 @@ async def receipt_received(message: Message, state: FSMContext, db_pool: asyncpg
         # The reservation already expired (see scheduler.expire_stale_bookings_job)
         # before the receipt arrived - the slot's already been released.
         await message.answer(
-            "Sorry, this reservation expired because the receipt wasn't received "
-            f"within {config.RECEIPT_TIMEOUT_MINUTES} minutes, and the slot was "
-            "released. Please choose a new time with /start."
+            "Uzr, bu bron chek qabul qilinmagani uchun bekor qilindi "
+            f"Berilgan vaqt {config.RECEIPT_TIMEOUT_MINUTES} daqiqa, va bron "
+            "bekor qilindi. Iltimos boshqa vaqt tanlang /start."
         )
         return
 
     await message.answer(
-        "Thanks! Your receipt was sent to the admin for confirmation. "
-        "You'll get a message here once it's approved. 🙏"
+        "Raxmat! Sizning chekingiz adminga jonatildi va tasdiqlanishi kutilyapti. "
+        "Tasdiqlangandan song shu yerdan habar olasiz. 🙏"
     )
 
     booking = await queries.get_booking(db_pool, booking_id)

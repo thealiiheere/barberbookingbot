@@ -28,7 +28,7 @@ def _today() -> date:
 
 async def _send_dates(callback: CallbackQuery) -> None:
     await callback.message.edit_text(
-        "Choose a date:", reply_markup=dates_keyboard(_today())
+        "Sana tanlang", reply_markup=dates_keyboard(_today())
     )
 
 
